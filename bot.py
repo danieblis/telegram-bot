@@ -2,106 +2,93 @@ import telebot
 import requests
 from datetime import datetime
 
-TOKEN = "8505732689:AAGyWtz_HqJLCa7qwNJPTe6uI4qMzOKLTdQ"
+# 🔐 توکن ربات
+TOKEN = "7715687486:AAFzsYcAg306azyqMyrl6C1JQZQ7drN2OO8"
+
 bot = telebot.TeleBot(TOKEN)
 
-# API قیمت ارز دیجیتال
-COIN_API = "https://api.coingecko.com/api/v3/simple/price"
-# API قیمت دلار آزاد از floatrates (بدون نیاز به API Key)
-DOLLAR_API = "http://www.floatrates.com/daily/usd.json"
+# API قیمت کریپتو
+CRYPTO_API = "https://api.coingecko.com/api/v3/simple/price"
 
-def get_dollar_rate():
-    try:
-        resp = requests.get(DOLLAR_API, timeout=10).json()
-        # floatrates نرخ USD به IRR را در کلید "irr" می‌دهد
-        if "irr" in resp:
-            return float(resp["irr"]["rate"])
-        # اگر نبود مقدار دیگری برگشت
-        return None
-    except:
-        return None
-
-def get_crypto_prices():
-    try:
-        params = {"ids":"bitcoin,ethereum,tron,tether","vs_currencies":"usd"}
-        return requests.get(COIN_API, params=params, timeout=10).json()
-    except:
-        return None
+# API قیمت دلار (آزاد)
+DOLLAR_API = "https://api.tgju.org/v1/price/latest"
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(
-        message.chat.id,
-        "سلام! 👋\nقیمت لحظه‌ای ارز و دلار رو حساب می‌کنم.\nمثال:\n500 TRX\n50 USD",
-        parse_mode="Markdown"
+    text = (
+        "🤖 *ربات قیمت‌گیر*\n\n"
+        "📌 مثال‌ها:\n"
+        "▫️ `50 دلار`\n"
+        "▫️ `500 ترون`\n"
+        "▫️ `/price`\n\n"
+        "⏱ قیمت‌ها لحظه‌ای"
     )
+    bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
-@bot.message_handler(func=lambda m: True)
-def convert(message):
-    text = message.text.strip().upper()
-    parts = text.split()
-
-    prices = get_crypto_prices()
-    dollar_rate = get_dollar_rate()  # دلار لحظه‌ای
-
-    if not prices or not dollar_rate:
-        bot.send_message(message.chat.id, "❌ خطا در دریافت قیمت‌ها. دوباره امتحان کن.")
-        return
-
+@bot.message_handler(commands=['price'])
+def price(message):
     try:
-        amount, coin = parts
-        amount = float(amount)
-        coin = coin.upper()
+        crypto = requests.get(CRYPTO_API, params={
+            "ids": "bitcoin,ethereum,tron,tether",
+            "vs_currencies": "usd"
+        }, timeout=10).json()
 
-        result = ""
-        usd = 0
-
-        if coin == "TRX":
-            usd = amount * prices["tron"]["usd"]
-            result = (
-                f"₮ {amount:,.0f} ترون ≈ 💵 {usd:.2f} دلار\n"
-                f"🏦 ≈ {usd * dollar_rate:,.0f} تومان\n"
-                f"📈 قیمت دلار (روز): {dollar_rate:,.0f} تومان"
-            )
-
-        elif coin == "BTC":
-            usd = amount * prices["bitcoin"]["usd"]
-            result = (
-                f"₿ {amount:.6f} بیت‌کوین ≈ 💵 {usd:.2f} دلار\n"
-                f"🏦 ≈ {usd * dollar_rate:,.0f} تومان\n"
-                f"📈 قیمت دلار (روز): {dollar_rate:,.0f} تومان"
-            )
-
-        elif coin == "ETH":
-            usd = amount * prices["ethereum"]["usd"]
-            result = (
-                f"🔷 {amount:.6f} اتریوم ≈ 💵 {usd:.2f} دلار\n"
-                f"🏦 ≈ {usd * dollar_rate:,.0f} تومان\n"
-                f"📈 قیمت دلار (روز): {dollar_rate:,.0f} تومان"
-            )
-
-        elif coin == "USDT":
-            usd = amount * prices["tether"]["usd"]
-            result = (
-                f"💵 {amount:.2f} تتر ≈ 💵 {usd:.2f} دلار\n"
-                f"🏦 ≈ {usd * dollar_rate:,.0f} تومان\n"
-                f"📈 قیمت دلار (روز): {dollar_rate:,.0f} تومان"
-            )
-
-        elif coin == "USD":
-            result = (
-                f"💵 {amount:.2f} دلار ≈ 🏦 {amount * dollar_rate:,.0f} تومان\n"
-                f"📈 قیمت دلار (روز): {dollar_rate:,.0f} تومان"
-            )
-
-        else:
-            result = "❌ ارز پشتیبانی نمی‌شود."
+        dollar = requests.get(DOLLAR_API, timeout=10).json()
+        dollar_price = int(float(dollar["data"]["price_dollar_rl"]["p"]))
 
         now = datetime.now().strftime("%Y/%m/%d - %H:%M")
-        result += f"\n🕒 زمان محاسبه: {now}"
 
-        bot.send_message(message.chat.id, result)
+        text = (
+            "📊 *قیمت‌های امروز*\n\n"
+            f"💵 دلار: `{dollar_price:,}` تومان\n"
+            f"₿ بیت‌کوین: `${crypto['bitcoin']['usd']:,}`\n"
+            f"🔷 اتریوم: `${crypto['ethereum']['usd']:,}`\n"
+            f"🪙 ترون: `${crypto['tron']['usd']}`\n"
+            f"💲 تتر: `${crypto['tether']['usd']}`\n\n"
+            f"🕒 `{now}`"
+        )
+
+        bot.send_message(message.chat.id, text, parse_mode="Markdown")
+
     except:
-        bot.send_message(message.chat.id, "❌ فرمت اشتباه. مثل: 500 TRX")
+        bot.send_message(message.chat.id, "❌ خطا در دریافت قیمت‌ها")
 
+@bot.message_handler(func=lambda m: True)
+def calc(message):
+    try:
+        txt = message.text.replace(" ", "")
+        crypto = requests.get(CRYPTO_API, params={
+            "ids": "tron,tether",
+            "vs_currencies": "usd"
+        }, timeout=10).json()
+
+        dollar = requests.get(DOLLAR_API, timeout=10).json()
+        dollar_price = int(float(dollar["data"]["price_dollar_rl"]["p"]))
+
+        if "دلار" in txt:
+            amount = int(txt.replace("دلار", ""))
+            toman = amount * dollar_price
+            bot.send_message(
+                message.chat.id,
+                f"💵 {amount} دلار\n"
+                f"💰 معادل: `{toman:,}` تومان",
+                parse_mode="Markdown"
+            )
+
+        elif "ترون" in txt:
+            amount = int(txt.replace("ترون", ""))
+            usd = amount * crypto["tron"]["usd"]
+            toman = int(usd * dollar_price)
+            bot.send_message(
+                message.chat.id,
+                f"🪙 {amount} ترون\n"
+                f"💲 {usd:.2f} دلار\n"
+                f"💰 `{toman:,}` تومان",
+                parse_mode="Markdown"
+            )
+
+    except:
+        pass
+
+print("🚀 ربات اجرا شد")
 bot.infinity_polling()
