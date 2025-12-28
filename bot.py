@@ -1,35 +1,27 @@
 import telebot
 import requests
+from flask import Flask, request
 from datetime import datetime
+import os
 
-TOKEN = "8505732689:AAGyWtz_HqJLCa7qwNJPTe6uI4qMzOKLTdQ"  # حتما توکن واقعی بذار
+TOKEN = os.environ.get("8505732689:AAGyWtz_HqJLCa7qwNJPTe6uI4qMzOKLTdQ")
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 bot = telebot.TeleBot(TOKEN)
+server = Flask(__name__)
 
 CRYPTO_API = "https://api.coingecko.com/api/v3/simple/price"
+FIAT_API = "https://api.coingecko.com/api/v3/simple/price"
 
-# دریافت قیمت دلار از CoinGecko (جایگزین API مشکل‌دار)
 def get_dollar_price():
     try:
-        r = requests.get(
-            "https://api.coingecko.com/api/v3/simple/price",
-            params={"ids": "usd", "vs_currencies": "irr"},
-            timeout=10
-        ).json()
+        r = requests.get(FIAT_API, params={"ids":"usd","vs_currencies":"irr"}, timeout=10).json()
         return int(r["usd"]["irr"])
     except:
         return None
 
-# دریافت قیمت ارزهای دیجیتال
 def get_crypto_prices():
     try:
-        r = requests.get(
-            CRYPTO_API,
-            params={
-                "ids": "tron,tether,bitcoin,ethereum",
-                "vs_currencies": "usd"
-            },
-            timeout=10
-        ).json()
+        r = requests.get(CRYPTO_API, params={"ids":"tron,tether,bitcoin,ethereum","vs_currencies":"usd"}, timeout=10).json()
         return r
     except:
         return {}
@@ -39,13 +31,7 @@ def start(msg):
     bot.send_message(
         msg.chat.id,
         "💱 *ربات محاسبه قیمت ارز*\n\n"
-        "✍️ مثال:\n"
-        "• `50 دلار`\n"
-        "• `500 ترون`\n"
-        "• `100 تتر`\n"
-        "• `2 بیت‌کوین`\n"
-        "• `1 اتریوم`\n\n"
-        "📌 قابل استفاده در گروه و کانال",
+        "✍️ مثال:\n50 دلار\n500 ترون\n100 تتر\n2 بیت‌کوین\n1 اتریوم",
         parse_mode="Markdown"
     )
 
@@ -62,64 +48,50 @@ def calc(msg):
         return
 
     try:
-        # دلار
         if "دلار" in text:
-            amount = float(text.replace("دلار", ""))
+            amount = float(text.replace("دلار",""))
             toman = int(amount * dollar)
-            bot.send_message(
-                msg.chat.id,
-                f"💵 {amount} دلار\n"
-                f"💰 `{toman:,}` تومان\n🕒 {now}",
-                parse_mode="Markdown"
-            )
-        # ترون
+            bot.send_message(msg.chat.id, f"💵 {amount} دلار\n💰 `{toman:,}` تومان\n🕒 {now}", parse_mode="Markdown")
         elif "ترون" in text:
-            amount = float(text.replace("ترون", ""))
+            amount = float(text.replace("ترون",""))
             usd = amount * crypto["tron"]["usd"]
             toman = int(usd * dollar)
-            bot.send_message(
-                msg.chat.id,
-                f"🔴 {amount} ترون\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}",
-                parse_mode="Markdown"
-            )
-        # تتر
+            bot.send_message(msg.chat.id, f"🔴 {amount} ترون\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}", parse_mode="Markdown")
         elif "تتر" in text:
-            amount = float(text.replace("تتر", ""))
+            amount = float(text.replace("تتر",""))
             usd = amount
             toman = int(usd * dollar)
-            bot.send_message(
-                msg.chat.id,
-                f"🟢 {amount} تتر\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}",
-                parse_mode="Markdown"
-            )
-        # بیت‌کوین
+            bot.send_message(msg.chat.id, f"🟢 {amount} تتر\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}", parse_mode="Markdown")
         elif "بیتکوین" in text or "بیت‌کوین" in text:
-            amount = float(text.replace("بیتکوین", "").replace("بیت‌کوین", ""))
+            amount = float(text.replace("بیتکوین","").replace("بیت‌کوین",""))
             usd = amount * crypto["bitcoin"]["usd"]
             toman = int(usd * dollar)
-            bot.send_message(
-                msg.chat.id,
-                f"₿ {amount} بیت‌کوین\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}",
-                parse_mode="Markdown"
-            )
-        # اتریوم
+            bot.send_message(msg.chat.id, f"₿ {amount} بیت‌کوین\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}", parse_mode="Markdown")
         elif "اتریوم" in text:
-            amount = float(text.replace("اتریوم", ""))
+            amount = float(text.replace("اتریوم",""))
             usd = amount * crypto["ethereum"]["usd"]
             toman = int(usd * dollar)
-            bot.send_message(
-                msg.chat.id,
-                f"🔷 {amount} اتریوم\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}",
-                parse_mode="Markdown"
-            )
+            bot.send_message(msg.chat.id, f"🔷 {amount} اتریوم\n💲 {usd:.2f} دلار\n💰 `{toman:,}` تومان\n🕒 {now}", parse_mode="Markdown")
         else:
-            bot.send_message(
-                msg.chat.id,
-                "❌ ارز پشتیبانی نمی‌شود\n✍️ مثال صحیح:\n`50 دلار`\n`500 ترون`",
-                parse_mode="Markdown"
-            )
+            bot.send_message(msg.chat.id, "❌ ارز پشتیبانی نمی‌شود\n✍️ مثال صحیح:\n50 دلار\n500 ترون", parse_mode="Markdown")
     except:
         bot.send_message(msg.chat.id, "❌ فرمت پیام اشتباه است")
 
-print("🚀 ربات اجرا شد")
-bot.infinity_polling()
+# ---------- Webhook ----------
+PORT = int(os.environ.get("PORT", 10000))
+
+@server.route(f"/{TOKEN}", methods=['POST'])
+def get_message():
+    json_str = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return "!", 200
+
+@server.route("/")
+def index():
+    return "ربات آنلاین است", 200
+
+if __name__ == "__main__":
+    bot.remove_webhook()
+    bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
+    server.run(host="0.0.0.0", port=PORT)
