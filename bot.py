@@ -2,7 +2,7 @@ import telebot
 import requests
 from datetime import datetime
 
-TOKEN = "توکن_ربات_تو"
+TOKEN = "8505732689:AAGyWtz_HqJLCa7qwNJPTe6uI4qMzOKLTdQ"
 bot = telebot.TeleBot(TOKEN)
 
 # API قیمت ارز دیجیتال
