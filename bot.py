@@ -1,87 +1,35 @@
-import os
-import requests
-from flask import Flask, request
-import telebot
+from telethon import TelegramClient
+from telethon.tl.functions.account import UpdateProfileRequest
+import asyncio
 from datetime import datetime
 
-# ====== TOKEN ======
-TOKEN = os.environ.get("8505732689:AAGyWtz_HqJLCa7qwNJPTe6uI4qMzOKLTdQ")
-bot = telebot.TeleBot(TOKEN)
-app = Flask(__name__)
+# ===== اطلاعات اکانت =====
+api_id = 1234567        # api_id خودت
+api_hash = "API_HASH_HERE"
 
-# ====== PRICE API ======
-CRYPTO_API = "https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd"
-DOLLAR_API = "https://api.exchangerate-api.com/v4/latest/USD"
+# متن پایه اسم
+BASE_NAME = "a Q a P e J a K"
 
-# ====== FUNCTIONS ======
-def get_tron_price():
-    try:
-        r = requests.get(CRYPTO_API, timeout=10).json()
-        return r["tron"]["usd"]
-    except:
-        return None
+client = TelegramClient("session_name", api_id, api_hash)
 
-def get_dollar_price():
-    try:
-        r = requests.get(DOLLAR_API, timeout=10).json()
-        return r["rates"]["IRR"]
-    except:
-        return None
+async def change_name():
+    while True:
+        now = datetime.now()
+        time_str = now.strftime("%H:%M")
 
-# ====== BOT HANDLER ======
-@bot.message_handler(func=lambda message: True)
-def handle_message(message):
-    text = message.text.lower()
-    now = datetime.now().strftime("%Y/%m/%d - %H:%M")
+        new_name = f"{BASE_NAME} {time_str}"
 
-    tron = get_tron_price()
-    dollar = get_dollar_price()
+        await client(UpdateProfileRequest(
+            first_name=new_name
+        ))
 
-    if tron is None or dollar is None:
-        bot.reply_to(message, "❌ خطا در دریافت قیمت‌ها!")
-        return
+        print("نام تغییر کرد →", new_name)
 
-    if "ترون" in text or "trx" in text:
-        msg = f"""
-💎 قیمت ترون (TRX)
+        await asyncio.sleep(60)  # هر 1 دقیقه
 
-🔹 قیمت جهانی: {tron} دلار
-🔹 معادل تومان: {int(tron * dollar):,} تومان
+async def main():
+    await client.start()
+    print("ربات تغییر نام فعال شد")
+    await change_name()
 
-🕒 {now}
-"""
-        bot.reply_to(message, msg)
-
-    elif "دلار" in text or "$" in text:
-        msg = f"""
-💵 قیمت دلار
-
-🔹 نرخ روز: {int(dollar):,} تومان
-
-🕒 {now}
-"""
-        bot.reply_to(message, msg)
-
-    else:
-        bot.reply_to(
-            message,
-            "✳️ برای دریافت قیمت بنویس:\n\nدلار\nترون"
-        )
-
-# ====== WEBHOOK ======
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    json_str = request.get_data().decode("UTF-8")
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return "OK", 200
-
-@app.route("/")
-def index():
-    return "Bot is running", 200
-
-# ====== START ======
-if __name__ == "__main__":
-    bot.remove_webhook()
-    bot.set_webhook(url=f"https://YOUR-RENDER-URL.onrender.com/{TOKEN}")
-    app.run(host="0.0.0.0", port=10000)
+client.loop.run_until_complete(main())
