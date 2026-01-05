@@ -3,11 +3,11 @@ import telebot
 import re
 
 BOT_TOKEN = "7778912181:AAGY_XOuv8U2eHsnVzYgTyLKAtsdO8wv62k"
-CHANNEL = "https://t.me/aQa_pejak_jenel1"
+CHANNEL = "@aQa_pejak_jenel1"
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# بررسی هش
+# بررسی هش TRX
 def is_tx_hash(text):
     return bool(re.fullmatch(r"[a-fA-F0-9]{64}", text))
 
@@ -28,6 +28,7 @@ def check_trx(tx_hash):
 
     tx_link = f"https://tronscan.org/#/transaction/{tx_hash}"
 
+    # پیام گرافیکی و حرفه‌ای
     return (
         f"💎━━━━━━━━━━━━━━━━💎\n"
         f"        **اطلاعات تراکنش TRON**\n"
@@ -38,11 +39,11 @@ def check_trx(tx_hash):
         f"💰 **Amount:**\n`{amount} {token}`\n\n"
         f"📌 **Status:** {status}\n\n"
         f"💠━━━━━━━━━━━━━━━━💠\n"
-        f"📢 Channel: [{CHANNEL}](https://t.me/{CHANNEL.strip('@')})\n"
+        f"📢 کانال ما: [{CHANNEL}](https://t.me/aQa_pejak_jenel1)\n"
         f"💠━━━━━━━━━━━━━━━━💠"
     )
 
-# ذخیره آخرین هش‌ها برای هر کاربر (در حافظه موقت)
+# ذخیره آخرین هش‌ها برای هر کاربر
 user_last_hashes = {}
 
 @bot.message_handler(func=lambda m: True)
