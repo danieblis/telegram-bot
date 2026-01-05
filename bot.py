@@ -72,7 +72,7 @@ threading.Thread(target=pending_checker, daemon=True).start()
 def send_start(message):
     bot.send_message(
         message.chat.id,
-        "👋 سلام! من ربات هش چکر a Q a  P e J a k هستم.\n\n"
+        "👋 سلام! من ربات هش چکر a Q a  P e J a K هستم.\n\n"
         "💡 برای استفاده، فقط هش تراکنش 64 کاراکتری TRX رو بفرست.\n"
         "📜 دستورات:\n"
         "/last - نمایش 10 هش آخر شما\n"
