@@ -77,7 +77,6 @@ def all_messages(message):
             bot.send_message(message.chat.id, f"❌ خطا:\n{e}")
 
     if not found_hash:
-        bot.send_message(message.chat.id, "❌ هش معتبر پیدا نشد، لطفاً فقط هش 64 کاراکتری TRX بفرستید.")
-
+        
 print("🤖 Bot is running...")
 bot.polling(none_stop=True)
