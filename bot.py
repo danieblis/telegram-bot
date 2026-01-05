@@ -1,35 +1,60 @@
-from telethon import TelegramClient
-from telethon.tl.functions.account import UpdateProfileRequest
-import asyncio
-from datetime import datetime
+import requests
+import telebot
 
-# ===== اطلاعات اکانت =====
-api_id = 1234567        # api_id خودت
-api_hash = "API_HASH_HERE"
+BOT_TOKEN = "7778912181:AAGY_XOuv8U2eHsnVzYgTyLKAtsdO8wv62k"
+CHANNEL = "https://t.me/aQa_pejak_jenel1"
 
-# متن پایه اسم
-BASE_NAME = "a Q a P e J a K"
+bot = telebot.TeleBot(BOT_TOKEN)
 
-client = TelegramClient("session_name", api_id, api_hash)
+# وقتی /start یا /check زده شد
+@bot.message_handler(commands=["start", "check"])
+def ask_hash(message):
+    bot.send_message(
+        message.chat.id,
+        "برای چک کردن لطفا هش رو بفرست!👤"
+    )
 
-async def change_name():
-    while True:
-        now = datetime.now()
-        time_str = now.strftime("%H:%M")
+# وقتی کاربر هش فرستاد
+@bot.message_handler(func=lambda m: True)
+def check_tx(message):
+    tx_hash = message.text.strip()
 
-        new_name = f"{BASE_NAME} {time_str}"
+    if len(tx_hash) < 20:
+        bot.send_message(message.chat.id, "❌ هش نامعتبره")
+        return
 
-        await client(UpdateProfileRequest(
-            first_name=new_name
-        ))
+    bot.send_message(message.chat.id, "⏳ در حال بررسی تراکنش...")
 
-        print("نام تغییر کرد →", new_name)
+    url = f"https://apilist.tronscan.org/api/transaction-info?hash={tx_hash}"
 
-        await asyncio.sleep(60)  # هر 1 دقیقه
+    try:
+        r = requests.get(url, timeout=10)
+        data = r.json()
 
-async def main():
-    await client.start()
-    print("ربات تغییر نام فعال شد")
-    await change_name()
+        if "contractData" not in data:
+            bot.send_message(message.chat.id, "❌ تراکنش پیدا نشد")
+            return
 
-client.loop.run_until_complete(main())
+        sender = data.get("ownerAddress", "نامشخص")
+        receiver = data.get("toAddress", "نامشخص")
+        amount = data.get("contractData", {}).get("amount", 0) / 1_000_000
+        token = data.get("tokenInfo", {}).get("tokenAbbr", "TRX")
+        status = "✅ موفق" if data.get("confirmed") else "⏳ در انتظار تایید"
+
+        msg = (
+            "📄 اطلاعات تراکنش\n\n"
+            f"🔗 Hash:\n{tx_hash}\n\n"
+            f"👤 From:\n{sender}\n\n"
+            f"🎯 To:\n{receiver}\n\n"
+            f"💰 Amount:\n{amount} {token}\n\n"
+            f"📌 Status: {status}\n\n"
+            f"📢 Channel: {CHANNEL}"
+        )
+
+        bot.send_message(message.chat.id, msg)
+
+    except Exception as e:
+        bot.send_message(message.chat.id, f"❌ خطا:\n{e}")
+
+print("🤖 Bot is running...")
+bot.infinity_polling()
