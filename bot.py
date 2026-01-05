@@ -3,7 +3,7 @@ import telebot
 import re
 
 BOT_TOKEN = "7778912181:AAGY_XOuv8U2eHsnVzYgTyLKAtsdO8wv62k"
-CHANNEL = "@aQa_pejak_jenel1"
+CHANNEL = "https://t.me/aQa_pejak_jenel1"
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -38,7 +38,7 @@ def check_trx(tx_hash):
         f"💰 **Amount:**\n`{amount} {token}`\n\n"
         f"📌 **Status:** {status}\n\n"
         f"💠━━━━━━━━━━━━━━━━💠\n"
-        f"📢 کانال ما: [{CHANNEL}](https://t.me/{CHANNEL.strip('@')})\n"
+        f"📢 Channel: [{CHANNEL}](https://t.me/{CHANNEL.strip('@')})\n"
         f"💠━━━━━━━━━━━━━━━━💠"
     )
 
