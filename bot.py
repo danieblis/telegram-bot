@@ -4,7 +4,7 @@ import re
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # ========= تنظیمات =========
-BOT_TOKEN = "7778912181:AAGY_XOuv8U2eHsnVzYgTyLKAtsdO8wv62k"
+BOT_TOKEN = "7778912181:AAGPUKdIW9-LV-woFF7Z6mTpzDt_BCgw1gM"
 CHANNEL = "@aQa_pejak_jenel1"
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
